@@ -1,218 +1,125 @@
-import styles from './Nav.module.css';
-import { useInView } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
-import App from "../App.jsx";
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-function Nav({ scrollToAbout,scrollToExperience,scrollToProject,scrollToContact,aboutRef, experienceRef, projectRef, contactRef}) {
+export default function Nav({ scrollToAbout, scrollToExperience, scrollToProject, scrollToContact }) {
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-    const [isVisible, setIsVisible] = useState(false);
-    const [clicker, setClicker] = useState(null);
-    const [component, setComponent] = useState(null);
-    const yOffset = -window.innerHeight * 0.93;
-    const isAboutInView = useInView(aboutRef, {
-        margin: `0px 0px ${yOffset}px 0px`,
-        once: false,
-    });
-    const yOffsetExperience = -window.innerHeight * 0.93;
-    const isExperienceInView = useInView(aboutRef, {
-        margin: `0px 0px ${yOffsetExperience}px 0px`,
-        once: false,
-    });
-    const isProjectInView = useInView(projectRef, {amount: 0.53, once: false });
-    const isContactInView = useInView(contactRef, {amount: 0.53, once: false });
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
+  const links = [
+    { label: 'About', action: scrollToAbout },
+    { label: 'Experience', action: scrollToExperience },
+    { label: 'Projects', action: scrollToProject },
+    { label: 'Contact', action: scrollToContact },
+  ];
 
-    function handleAboutClick() {
-        scrollToAbout?.(); 
-        setIsVisible(false); 
-        setClicker(null);    
-        setComponent(null);  
-    }
+  const navStyle = {
+    position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
+    padding: scrolled ? '12px 48px' : '24px 48px',
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    background: scrolled ? 'rgba(8,8,8,0.92)' : 'transparent',
+    backdropFilter: scrolled ? 'blur(20px)' : 'none',
+    borderBottom: scrolled ? '1px solid rgba(200,255,0,0.1)' : 'none',
+    transition: 'all 0.4s ease',
+  };
 
-    function handleExperienceClick() {
-        scrollToExperience?.(); 
-        setIsVisible(false); 
-        setClicker(null);    
-        setComponent(null);  
-    }
+  return (
+    <nav style={navStyle}>
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6 }}
+        style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: 4, color: '#c8ff00' }}
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      >
+        NM
+      </motion.div>
 
-    function handleProjectClick() {
-        scrollToProject?.(); 
-        setIsVisible(false); 
-        setClicker(null);    
-        setComponent(null);  
-    }
+      {/* Desktop links */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        style={{ display: 'flex', gap: 40 }}
+        className="nav-desktop"
+      >
+        {links.map((l, i) => (
+          <NavLink key={l.label} label={l.label} action={l.action} delay={i * 0.05} />
+        ))}
+      </motion.div>
 
-    function handleHomeClick() {
-    window.scrollTo({ top: 0, behavior: "smooth" }); 
-    setIsVisible(false);
-    setClicker(null);
-    setComponent(null);
-    }
+      {/* Mobile hamburger */}
+      <button
+        onClick={() => setMenuOpen(!menuOpen)}
+        className="nav-hamburger"
+        style={{ background: 'none', border: 'none', cursor: 'none', display: 'none' }}
+      >
+        <div style={{ width: 24, height: 2, background: '#c8ff00', margin: '5px 0', transition: 'all 0.3s',
+          transform: menuOpen ? 'rotate(45deg) translate(5px, 5px)' : 'none' }} />
+        <div style={{ width: 24, height: 2, background: '#c8ff00', margin: '5px 0', opacity: menuOpen ? 0 : 1 }} />
+        <div style={{ width: 24, height: 2, background: '#c8ff00', margin: '5px 0', transition: 'all 0.3s',
+          transform: menuOpen ? 'rotate(-45deg) translate(5px, -5px)' : 'none' }} />
+      </button>
 
-    function handleContactClick() {
-        scrollToContact?.(); 
-        setIsVisible(false); 
-        setClicker(null);    
-        setComponent(null);  
-    }
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            style={{
+              position: 'absolute', top: '100%', left: 0, right: 0,
+              background: 'rgba(8,8,8,0.97)', padding: 32,
+              display: 'flex', flexDirection: 'column', gap: 24,
+              borderBottom: '1px solid rgba(200,255,0,0.2)'
+            }}
+          >
+            {links.map(l => (
+              <a key={l.label} onClick={() => { l.action(); setMenuOpen(false); }}
+                style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 32, letterSpacing: 3, cursor: 'none' }}>
+                {l.label}
+              </a>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-    let onBoard = null
-    const about = <>
-                    <div className={styles.space}></div>
-                    <p className={styles.about} >
-                    I am Nihad Mammadov, a dedicated <b>Full-Stack Developer</b> who currently studies Computer Engineering at Baku Higher Oil School.
-                    </p>
-                    <p className={styles.about}>Currently developing my Front-end skills, as the portfolio will get updated for each improvement made in those skills.</p>
-                    <p className={styles.about}>Click <b>More About</b> to get more information about me.</p>
-                    <a className={styles.moreAbout}  onClick={handleAboutClick}>More About</a>
-                </>
-
-
-    
-    const experience = <>
-                    <div className={styles.space}></div>
-                    <p className={styles.about} >
-                    I have been actively participated in many Software Engineer Internships, worked as a employee at certain companies.
-                    </p>
-                    <p className={styles.about}>My experience is not only limited with internships, but also been active in volunteering, playing crucial role as a team member.</p>
-                    <p className={styles.about} >Click <b>More Experience</b> to read more about my experience.</p>
-                    <a className={styles.moreExperience} onClick={handleExperienceClick}>More Experience</a>  
-                    </>
-
-    const project = <>
-                    <div className={styles.space}></div>
-                    <p className={styles.about} >
-                    It is not only about learning, but implementing those skills in projects that will boost any Developer's career.
-                    </p>
-                    <p className={styles.about}>To improve my Backend and Frontend skills, I have worked on some of the little, yet worthy to check projects.</p>
-                    <p className={styles.about}>Click <b>More Projects</b> to check my projects.</p>
-                    <a className={styles.moreExperience}  onClick={handleProjectClick}>More Project</a>  
-                    </>
-
-    const contact = <>
-                    <div className={styles.spaceContact}></div>
-                    <p className={styles.contact}>
-                    If you have any recommedations about improving my Portfolio or need any help of my level, feel free to contact with me.
-                    </p>
-                    <p className={styles.contact} >Click <b>More Contact</b> to contact with me.</p>
-                    <a className={styles.moreContact} onClick={handleContactClick}>More Contact</a>  
-                    </>
-
-                    
-
-    
-    function openBoard(event) {
-        const id = event.target.id;
-
-        if (id === "home") {
-            setClicker(id);
-            return
+      <style>{`
+        @media (max-width: 768px) {
+          .nav-desktop { display: none !important; }
+          .nav-hamburger { display: block !important; }
         }
-
-    
-        if (clicker === null || clicker !== id) {
-            setClicker(id);
-            setIsVisible(true);
-
-            if (id === "about") {
-                if(clicker === "contact" || clicker === "experience" || clicker === "project") {
-                    setIsVisible(false)
-                    setTimeout(() => {
-                        setIsVisible(true);
-                        setComponent(about);
-                    }, 500); 
-                    
-                }
-                else {setComponent(about);}
-                
-            } 
-            
-            else if (id === "contact") {
-                if(clicker === "about" || clicker === "experience" || clicker === "project") {
-                    setIsVisible(false)
-                    setTimeout(() => {
-                        setIsVisible(true);
-                        setComponent(contact);
-                    }, 500); 
-                    
-                }
-                else {setComponent(contact);}
-                
-            }
-
-            else if (id === "experience") {
-                if(clicker === "about" || clicker === "contact" || clicker === "project") {
-                    setIsVisible(false)
-                    setTimeout(() => {
-                        setIsVisible(true);
-                        setComponent(experience);
-                    }, 500); 
-                    
-                }
-                else {setComponent(experience);}
-                
-            }
-
-            else if (id === "project") {
-                if(clicker === "about" || clicker === "contact" || clicker === "experience") {
-                    setIsVisible(false)
-                    setTimeout(() => {
-                        setIsVisible(true);
-                        setComponent(project);
-                    }, 500); 
-                    
-                }
-                else {setComponent(project);}
-                
-            }
-
-            else {
-                setComponent(null);
-            }
-            
-
-
-        } else {
-            setIsVisible(false);
-            setClicker(null);
-            setTimeout(() => {
-                setComponent(null);
-            }, 500); 
-
-        }
-    }
-
-    let nav = <nav>
-                <div className={`
-                    ${styles.navbarContainer} 
-                    ${isAboutInView ? styles.navbarAbout : ''}
-                    ${isExperienceInView ? styles.navbarExperience : ''}
-                    ${isProjectInView ? styles.navbarProject : ''}
-                    ${isContactInView ? styles.navbarContact : ''}
-                `}>
-                    <p id={styles.name}>My Portfolio</p>
-                    <a id="home" className={styles.navbar} onClick={handleHomeClick}>Home</a>
-                    <a id = "about" className={styles.navbar} onClick={(event) => openBoard(event)} >About</a>
-                    <a id = "experience" className={styles.navbar} onClick={(event) => openBoard(event)} >Experience</a>
-                    <a id = "project" className={styles.navbar} onClick={(event) => openBoard(event)} >Project</a>
-                    <a id = "contact" className={styles.navbar} onClick={(event) => openBoard(event)} >Contact</a>
-                </div>
-
-                <div style={{ 
-                    marginTop: isVisible ? "-300px" : "-600px",
-                    borderRadius: isVisible ? styles.board.borderRadius : "0px"
-                }} 
-                className={`${styles.board} ${isAboutInView ? styles.boardAbout : ''}`}>
-                    {component}
-                </div>
-            </nav>
-    
-
-
-    return nav
+      `}</style>
+    </nav>
+  );
 }
 
-
-
-export default Nav;
+function NavLink({ label, action }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <span
+      onClick={action}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        fontFamily: "'Space Mono', monospace", fontSize: 11, letterSpacing: 3,
+        textTransform: 'uppercase', cursor: 'none',
+        color: hovered ? '#c8ff00' : '#999',
+        transition: 'color 0.3s',
+        position: 'relative',
+      }}
+    >
+      {label}
+      <span style={{
+        position: 'absolute', bottom: -4, left: 0,
+        width: hovered ? '100%' : 0, height: 1,
+        background: '#c8ff00', transition: 'width 0.3s ease',
+      }} />
+    </span>
+  );
+}
